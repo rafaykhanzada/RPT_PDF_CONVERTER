@@ -1,15 +1,15 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
 using iTextSharp.text.pdf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Remoting.Lifetime;
 using System.Web;
 using System.Web.Http;
-using System.Web.UI.WebControls;
 
 namespace FileService.Controllers
 {
@@ -17,42 +17,38 @@ namespace FileService.Controllers
     {
 
         // POST api/file
-        [HttpPost]
+        [HttpGet]
         [Route("api/upload")]
 
         public HttpResponseMessage UploadFiles()
         {
+            var rptParams = HttpContext.Current.Request.QueryString;
+            var jsonText = File.ReadAllText(HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] +"/config.json"));
+            var config = JsonConvert.DeserializeObject<Item>(jsonText);
+            string reportPath = HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] + "/");
             string path = HttpContext.Current.Server.MapPath("~/uploads/reports");
             string PDF_Path = HttpContext.Current.Server.MapPath("~/uploads/PDF");
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            
-            //Fetch the File.
-            HttpPostedFile postedFile = HttpContext.Current.Request.Files[0];
 
             //Fetch the File Name.
-            string fileName = "RPTFILE"+ Path.GetExtension(postedFile.FileName);
-            if (Directory.Exists(Path.Combine(path + fileName)))
-                Directory.Delete(Path.Combine(path + fileName), true);
-            //Save the File.
-            postedFile.SaveAs(Path.Combine(path, fileName));
+            string fileName = reportPath + rptParams[1] + ".rpt";
+
             var rd = new ReportDocument();
 
-            rd.Load(Path.Combine(path , fileName));
-            rd.SetDatabaseLogon("sa", "kfk9072p!", "192.168.19.23", "Daw_Cust_Email");
-            for (int index = 0; index < HttpContext.Current.Request.Form.Count; index++)
-            {
-                rd.SetParameterValue("@"+HttpContext.Current.Request.Form.Keys[index], HttpContext.Current.Request.Form[index]);
-            }
-            //rd.SetParameterValue(0, 3);
-            //rd.SetParameterValue(1, "99428");
-            //rd.Load(@"C:\\Users\Abdul Rafay\\Documents\\Projects\\.NetCore\\APIs\\CrystalReportWebAPI\\CrystalReportWebAPI\\Reports\\CustomerLedgerReport.rpt");
-            MemoryStream ms = new MemoryStream();
-            rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path , "CustomerLedger.pdf"));
+            rd.Load(fileName);
 
-            string WorkingFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string InputFile = Path.Combine(PDF_Path , "CustomerLedger.pdf");
-            string OutputFile = Path.Combine(PDF_Path , "CustomerLedger_Encyrpt.pdf");
+
+            rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
+
+            for (int index = 2; index < rptParams.Count; index++)
+            {
+                rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
+            }
+
+            MemoryStream ms = new MemoryStream();
+            rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path, rptParams[1] +".pdf"));
+
+            string InputFile = Path.Combine(PDF_Path, rptParams[1] +".pdf");
+            string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
 
             using (Stream input = new FileStream(InputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -64,19 +60,21 @@ namespace FileService.Controllers
             }
 
             //Send OK Response to Client.
-            //return Request.CreateResponse(HttpStatusCode.OK, fileName);
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StreamContent(new FileStream(Path.Combine(PDF_Path  , "CustomerLedger.pdf"), FileMode.Open, FileAccess.Read));
+            response.Content = new StreamContent(new FileStream(Path.Combine(PDF_Path, rptParams[1] + "_Encyrpt.pdf"), FileMode.Open, FileAccess.Read));
             response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = fileName;
+            response.Content.Headers.ContentDisposition.FileName = rptParams[1]+ "_Encyrpt.pdf";
             response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
-            if (Directory.Exists(InputFile))
-                Directory.Delete(InputFile, true);
-            if (Directory.Exists(OutputFile))
-                Directory.Delete(OutputFile, true);
             return response;
         }
-       
-
     }
+
+    public class Item
+    {
+        public string user { get; set; }
+        public string password { get; set; }
+        public string host { get; set; }
+        public string db { get; set; }
+    }
+
 }
