@@ -23,10 +23,9 @@ namespace FileService.Controllers
         public HttpResponseMessage UploadFiles()
         {
             var rptParams = HttpContext.Current.Request.QueryString;
-            var jsonText = File.ReadAllText(HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] +"/config.json"));
+            var jsonText = File.ReadAllText(HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] + "/config.json"));
             var config = JsonConvert.DeserializeObject<Item>(jsonText);
             string reportPath = HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] + "/");
-            string path = HttpContext.Current.Server.MapPath("~/uploads/reports");
             string PDF_Path = HttpContext.Current.Server.MapPath("~/uploads/PDF");
 
             //Fetch the File Name.
@@ -39,31 +38,33 @@ namespace FileService.Controllers
 
             rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
 
-            for (int index = 2; index < rptParams.Count; index++)
+            for (int index = 3; index < rptParams.Count; index++)
             {
                 rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
             }
 
             MemoryStream ms = new MemoryStream();
-            rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path, rptParams[1] +".pdf"));
+            rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path, rptParams[1] + ".pdf"));
 
-            string InputFile = Path.Combine(PDF_Path, rptParams[1] +".pdf");
-            string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
+            // Encrypt PDF
+            string InputFile = Path.Combine(PDF_Path, rptParams[1] + ".pdf");
+            string OutputFile = Path.Combine(PDF_Path, rptParams[1] + "_Encyrpt.pdf");
 
             using (Stream input = new FileStream(InputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (Stream output = new FileStream(OutputFile, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     PdfReader reader = new PdfReader(input);
-                    PdfEncryptor.Encrypt(reader, output, true, "1234", "1234", PdfWriter.ALLOW_PRINTING);
+                    PdfEncryptor.Encrypt(reader, output, true, rptParams[2], rptParams[2], PdfWriter.ALLOW_PRINTING);
                 }
             }
 
             //Send OK Response to Client.
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = new StreamContent(new FileStream(Path.Combine(PDF_Path, rptParams[1] + "_Encyrpt.pdf"), FileMode.Open, FileAccess.Read));
+            //response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("inline");
             response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = rptParams[1]+ "_Encyrpt.pdf";
+            response.Content.Headers.ContentDisposition.FileName = rptParams[1] + "_Encyrpt.pdf";
             response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
             return response;
         }
