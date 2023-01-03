@@ -39,6 +39,7 @@ namespace FileService.Controllers
             var rd = new ReportDocument();
 
             rd.Load(Path.Combine(path , fileName));
+            rd.SetDatabaseLogon("sa", "kfk9072p!", "192.168.19.23", "Daw_Cust_Email");
             for (int index = 0; index < HttpContext.Current.Request.Form.Count; index++)
             {
                 rd.SetParameterValue("@"+HttpContext.Current.Request.Form.Keys[index], HttpContext.Current.Request.Form[index]);
@@ -61,8 +62,7 @@ namespace FileService.Controllers
                     PdfEncryptor.Encrypt(reader, output, true, "1234", "1234", PdfWriter.ALLOW_PRINTING);
                 }
             }
-            if (Directory.Exists(InputFile))
-                Directory.Delete(InputFile, true);
+
             //Send OK Response to Client.
             //return Request.CreateResponse(HttpStatusCode.OK, fileName);
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
@@ -76,16 +76,7 @@ namespace FileService.Controllers
                 Directory.Delete(OutputFile, true);
             return response;
         }
-        public static void DeleteDirectory(string directoryName, bool checkDirectiryExist)
-        {
-            DirectoryInfo RootDir = new DirectoryInfo(@"C:\somedirectory\");
-            foreach (DirectoryInfo dir in RootDir.GetDirectories())
-                DeleteDirectory(dir.FullName, true);
-            if (Directory.Exists(directoryName))
-                Directory.Delete(directoryName, true);
-            else if (checkDirectiryExist)
-                throw new SystemException("Directory you want to delete is not exist");
-        }
+       
 
     }
 }
