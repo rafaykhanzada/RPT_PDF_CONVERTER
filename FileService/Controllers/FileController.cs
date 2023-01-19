@@ -18,7 +18,7 @@ namespace FileService.Controllers
 
         // POST api/file
         [HttpGet]
-        [Route("api/upload")]
+        [Route("report")]
 
         public HttpResponseMessage UploadFiles()
         {
@@ -28,10 +28,10 @@ namespace FileService.Controllers
             string reportPath = HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] + "/");
             string path = HttpContext.Current.Server.MapPath("~/uploads/reports");
             string PDF_Path = HttpContext.Current.Server.MapPath("~/uploads/PDF");
-
+            string output = rptParams[2];
             //Fetch the File Name.
             string fileName = reportPath + rptParams[1] + ".rpt";
-
+            //pdf, xlsx, docx
             var rd = new ReportDocument();
 
             rd.Load(fileName);
@@ -39,32 +39,35 @@ namespace FileService.Controllers
 
             rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
 
-            for (int index = 2; index < rptParams.Count; index++)
+            for (int index = 3; index < rptParams.Count; index++)
             {
                 rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
             }
 
             MemoryStream ms = new MemoryStream();
-            rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path, rptParams[1] +".pdf"));
+            var exportType = output == "docx" ? CrystalDecisions.Shared.ExportFormatType.WordForWindows : output == "xlsx" ? CrystalDecisions.Shared.ExportFormatType.ExcelWorkbook : CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
+            var media_type = output == "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : output == "xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
 
-            string InputFile = Path.Combine(PDF_Path, rptParams[1] +".pdf");
-            string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
+            rd.ExportToDisk(exportType, Path.Combine(PDF_Path, rptParams[1] +"."+output));
 
-            using (Stream input = new FileStream(InputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                using (Stream output = new FileStream(OutputFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    PdfReader reader = new PdfReader(input);
-                    PdfEncryptor.Encrypt(reader, output, true, "1234", "1234", PdfWriter.ALLOW_PRINTING);
-                }
-            }
+            //string InputFile = Path.Combine(PDF_Path, rptParams[1] +"."+ output);
+            //string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
+
+            //using (Stream input = new FileStream(InputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+            //{
+            //    using (Stream output = new FileStream(OutputFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            //    {
+            //        PdfReader reader = new PdfReader(input);
+            //        PdfEncryptor.Encrypt(reader, output, true, "1234", "1234", PdfWriter.ALLOW_PRINTING);
+            //    }
+            //}
 
             //Send OK Response to Client.
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StreamContent(new FileStream(Path.Combine(PDF_Path, rptParams[1] + "_Encyrpt.pdf"), FileMode.Open, FileAccess.Read));
-            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = rptParams[1]+ "_Encyrpt.pdf";
-            response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+            response.Content = new StreamContent(new FileStream(Path.Combine(PDF_Path, rptParams[1] + "."+ output), FileMode.Open, FileAccess.Read));
+            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue(output == "pdf" ? "inline":"attachment");
+            response.Content.Headers.ContentDisposition.FileName = rptParams[1]+ "."+ output;
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue(media_type);
             return response;
         }
     }
