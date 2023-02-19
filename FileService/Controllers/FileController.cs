@@ -1,8 +1,11 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
+using CrystalDecisions.Shared;
 using iTextSharp.text.pdf;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Printing;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -39,7 +42,7 @@ namespace FileService.Controllers
 
             rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
 
-            for (int index = 3; index < rptParams.Count; index++)
+            for (int index = 4; index < rptParams.Count; index++)
             {
                 rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
             }
@@ -50,6 +53,8 @@ namespace FileService.Controllers
 
             rd.ExportToDisk(exportType, Path.Combine(PDF_Path, rptParams[1] +"."+output));
 
+            if (rptParams.GetKey(3) == "IsPrint" && rptParams[3] == "true")
+                PrintPdf(rd,config.printer);
             //string InputFile = Path.Combine(PDF_Path, rptParams[1] +"."+ output);
             //string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
 
@@ -70,6 +75,25 @@ namespace FileService.Controllers
             response.Content.Headers.ContentType = new MediaTypeHeaderValue(media_type);
             return response;
         }
+        //Print PDF
+        public void PrintPdf(ReportDocument reportDocument,string printerName)
+        {
+            // load the .rpt file
+            // reportDocument.Load(@"C:\path\to\report.rpt");
+
+            // set the printer name
+            reportDocument.PrintOptions.PrinterName = printerName;
+
+            // set the duplex mode
+            reportDocument.PrintOptions.PrinterDuplex = PrinterDuplex.Simplex;
+
+            // set the paper orientation
+            reportDocument.PrintOptions.PaperOrientation = PaperOrientation.Portrait;
+
+            // print the report to the printer
+            reportDocument.PrintToPrinter(1, true, 0, 0);
+        }
+
     }
 
     public class Item
@@ -78,6 +102,7 @@ namespace FileService.Controllers
         public string password { get; set; }
         public string host { get; set; }
         public string db { get; set; }
+        public string printer { get; set; }
     }
 
 }

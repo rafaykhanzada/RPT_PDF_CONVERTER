@@ -1,6 +1,7 @@
 {
-    "user": "sa",
-    "password": "kfk9072p!",
-    "host": "192.168.19.23",
-    "db": "Daw_Cust_Email"
+  "user": "sa",
+  "password": "kfk9072p!",
+  "host": "192.168.19.23",
+  "db": "Daw_Cust_Email",
+  "printer": "HP LaserJet MFP M527 [C037EC]"
 }
