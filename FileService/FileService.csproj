@@ -299,7 +299,6 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="Reports\Dawlance\config.json" />
-    <Content Include="Reports\Dawlance\Old_CustomerLedgerReport.rpt" />
     <Content Include="Reports\Dawlance\CustomerLedgerReport.rpt" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
