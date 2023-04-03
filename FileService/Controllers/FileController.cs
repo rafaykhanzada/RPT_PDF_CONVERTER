@@ -30,7 +30,7 @@ namespace FileService.Controllers
                 var config = JsonConvert.DeserializeObject<Item>(jsonText);
                 string reportPath = HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] + "/");
                 string PDF_Path = HttpContext.Current.Server.MapPath("~/uploads/PDF");
-                bool encrypt = rptParams[2] == "true";
+                bool encrypt = rptParams[2].ToLower() == "true";
                 //Fetch the File Name.
                 string fileName = reportPath + rptParams[1] + ".rpt";
 
