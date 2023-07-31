@@ -34,20 +34,21 @@ namespace FileService.Controllers
                 //Fetch the File Name.
                 string fileName = reportPath + rptParams[1] + ".rpt";
 
-                var rd = new ReportDocument();
-
-                rd.Load(fileName);
-
-
-                rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
-
-                for (int index = 4; index < rptParams.Count; index++)
+                using (ReportDocument rd = new ReportDocument())
                 {
-                    rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
+                    rd.Load(fileName);
+
+
+                    rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
+
+                    for (int index = 4; index < rptParams.Count; index++)
+                    {
+                        rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
+                    }
+
+                    rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path, rptParams[1] + ".pdf"));
+
                 }
-
-                rd.ExportToDisk(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat, Path.Combine(PDF_Path, rptParams[1] + ".pdf"));
-
                 // Encrypt PDF
                 if (encrypt)
                 {
