@@ -35,26 +35,26 @@ namespace FileService.Controllers
             //Fetch the File Name.
             string fileName = reportPath + rptParams[1] + ".rpt";
             //pdf, xlsx, docx
-            var rd = new ReportDocument();
-
-            rd.Load(fileName);
-
-
-            rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
-
-            for (int index = 4; index < rptParams.Count; index++)
+            string media_type = "";
+            using (ReportDocument rd = new ReportDocument())
             {
-                rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
+                rd.Load(fileName);
+                rd.SetDatabaseLogon(config.user, config.password, config.host, config.db);
+
+                for (int index = 3; index < rptParams.Count; index++)
+                {
+                    rd.SetParameterValue("@" + rptParams.Keys[index], rptParams[index]);
+                }
+
+                MemoryStream ms = new MemoryStream();
+                var exportType = output == "docx" ? CrystalDecisions.Shared.ExportFormatType.WordForWindows : output == "xlsx" ? CrystalDecisions.Shared.ExportFormatType.ExcelWorkbook : CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
+                media_type = output == "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : output == "xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
+
+                rd.ExportToDisk(exportType, Path.Combine(PDF_Path, rptParams[1] + "." + output));
+
+                if (rptParams.GetKey(3) == "IsPrint" && rptParams[3] == "true")
+                    PrintPdf(rd, config.printer);
             }
-
-            MemoryStream ms = new MemoryStream();
-            var exportType = output == "docx" ? CrystalDecisions.Shared.ExportFormatType.WordForWindows : output == "xlsx" ? CrystalDecisions.Shared.ExportFormatType.ExcelWorkbook : CrystalDecisions.Shared.ExportFormatType.PortableDocFormat;
-            var media_type = output == "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : output == "xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
-
-            rd.ExportToDisk(exportType, Path.Combine(PDF_Path, rptParams[1] +"."+output));
-
-            if (rptParams.GetKey(3) == "IsPrint" && rptParams[3] == "true")
-                PrintPdf(rd,config.printer);
             //string InputFile = Path.Combine(PDF_Path, rptParams[1] +"."+ output);
             //string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
 
