@@ -55,6 +55,7 @@ namespace FileService.Controllers
                 if (rptParams.GetKey(3) == "IsPrint" && rptParams[3] == "true")
                     PrintPdf(rd, config.printer);
             }
+            #region Encrypt
             //string InputFile = Path.Combine(PDF_Path, rptParams[1] +"."+ output);
             //string OutputFile = Path.Combine(PDF_Path, rptParams[1] +"_Encyrpt.pdf");
 
@@ -66,6 +67,7 @@ namespace FileService.Controllers
             //        PdfEncryptor.Encrypt(reader, output, true, "1234", "1234", PdfWriter.ALLOW_PRINTING);
             //    }
             //}
+            #endregion
 
             //Send OK Response to Client.
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
