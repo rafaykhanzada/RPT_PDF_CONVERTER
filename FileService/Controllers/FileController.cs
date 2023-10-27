@@ -20,7 +20,7 @@ namespace FileService.Controllers
         [HttpGet]
         [Route("api/upload")]
 
-        public HttpResponseMessage UploadFiles()
+        public object UploadFiles()
         {
             try
             {
@@ -82,7 +82,7 @@ namespace FileService.Controllers
             }
             catch (Exception ex)
             {
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                return JsonConvert.SerializeObject(ex);
 
             }
         }
