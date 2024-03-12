@@ -51,9 +51,9 @@ namespace FileService.Controllers
                 media_type = output == "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : output == "xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf";
 
                 rd.ExportToDisk(exportType, Path.Combine(PDF_Path, rptParams[1] + "." + output));
-
-                if (rptParams.GetKey(3) == "IsPrint" && rptParams[3] == "true")
-                    PrintPdf(rd, config.printer);
+                
+                //if (rptParams.GetKey(3) == "IsPrint" && rptParams[3] == "true")
+                //    PrintPdf(rd, config.printer);
             }
             #region Encrypt
             //string InputFile = Path.Combine(PDF_Path, rptParams[1] +"."+ output);
