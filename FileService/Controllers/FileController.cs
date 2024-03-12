@@ -18,13 +18,13 @@ namespace FileService.Controllers
 
         // POST api/file
         [HttpGet]
-        [Route("api/upload")]
+        [Route("api/invoice")]
 
         public object UploadFiles()
         {
             try
             {
-                //"?Folder=Dawlance&Report=CustomerLedgerReport&Encrypt={encrypt}&Password={dealer.DealerCode}&Requestid={RequestId}&dealercode={dealer.DealerCode}&LedgerCoID={comId.Id}"
+                //"api/invoice?Folder=Dawlance&Report=CustomerLedgerReport&Encrypt={encrypt}&Password={dealer.DealerCode}&VBELN={VBELN}"
                 var rptParams = HttpContext.Current.Request.QueryString;
                 var jsonText = File.ReadAllText(HttpContext.Current.Server.MapPath("~/Reports/" + rptParams[0] + "/config.json"));
                 var config = JsonConvert.DeserializeObject<Item>(jsonText);
